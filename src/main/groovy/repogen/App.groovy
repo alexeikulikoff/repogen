@@ -89,7 +89,7 @@ class App {
 		dst.append('\tpublic static final String DICT_VERSION = "1";\n\n\n')
 		dst.append('\tprivate static Map<String, ServiceClassWrapper> wrapper = new HashMap<>();\n')
 		dst.append('\tprivate static Map<String, BiFunction<String, Object, Object>> saveMap = new HashMap<>();\n')
-		dst.append('\tprivate static Map<String, Function<String, Object>> findAllMap = new HashMap<>();\n')
+		dst.append('\tprivate static Map<String, Function<String, List<String>>> findAllMap = new HashMap<>();\n')
 
 		dh.eachFile {
 			if (it.isFile()) {
@@ -106,7 +106,7 @@ class App {
 		dst.append('\n\n\tpublic static final String ALLOWABLEVALUES = "' + allowableValues + '";\n')
 		dst.append('\n\n\tpublic static Map<String, ServiceClassWrapper> getWrapper() {\n\t\treturn wrapper;\n\t} \n')
 		dst.append('\n\n\tpublic static Map<String, BiFunction<String, Object, Object>> getSaveMap() {\n\t\treturn saveMap;\n\t} \n')
-		dst.append('\n\n\tpublic static Map<String, Function<String, Object>> getFindAllMap() {\n\t\t return findAllMap;\n\t } \n')
+		dst.append('\n\n\tpublic static Map<String, Function<String,List<String>>> getFindAllMap() {\n\t\t return findAllMap;\n\t } \n')
 		dst.append('\n\n\tprivate static String getVersion() {\n\t\treturn UUID.randomUUID().toString().substring(0, 8);\n\t} \n')
 		dst.append('\tpublic static void initServiceClassMap(ApplicationContext ctx) {\n')
 		dh.eachFile {
