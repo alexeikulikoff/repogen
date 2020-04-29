@@ -1,6 +1,7 @@
 
 package repogen
 
+
 class App {
 	static def appPath = '/home/admin2/eclipse-workspace/sys101_loader/src/main/java/com/cis/sys101/loader/'
 
@@ -69,6 +70,9 @@ class App {
 		dst.append('import java.lang.reflect.Method;\n')
 		dst.append('import java.lang.reflect.InvocationTargetException;\n')
 
+		dst.append('import org.slf4j.Logger;\n')
+		dst.append('import org.slf4j.LoggerFactory;\n')
+
 
 		dst.append('import org.springframework.context.ApplicationContext;\n')
 		dh.eachFile {
@@ -87,6 +91,9 @@ class App {
 		dst.append('\tpublic static final String DB_DICTIONARY_SCHEME = "public";\n')
 		dst.append('\tpublic static final LocalDate DATE = LocalDate.now();\n')
 		dst.append('\tpublic static final String DICT_VERSION = "1";\n\n\n')
+
+		dst.append('\tprivate static final Logger logger = LoggerFactory.getLogger(ServiceConstants.class);\n\n\n')
+
 		dst.append('\tprivate static Map<String, ServiceClassWrapper> wrapper = new HashMap<>();\n')
 		dst.append('\tprivate static Map<String, BiFunction<String, Object, Object>> saveMap = new HashMap<>();\n')
 		dst.append('\tprivate static Map<String, Function<String, List<String>>> findAllMap = new HashMap<>();\n')
@@ -124,32 +131,60 @@ class App {
 					dst.append('\t\t\tIterable<' + entName + '> lines = ctx.getBean(s, ' + repName + '.class).findAll();\n')
 					dst.append('\t\t\tfor (' + entName + ' t : lines) {\n')
 					dst.append('\t\t\t\tMethod[] methods = ' + entName + '.class.getDeclaredMethods();\n')
-					dst.append('\t\t\t\tString value = "";\n')
+					dst.append('\t\t\t\tStringBuilder header = new StringBuilder();\n')
+					dst.append('\t\t\t\tStringBuilder value = new StringBuilder();\n')
 					dst.append('\t\t\t\tfor (Method m : methods) {\n')
 					dst.append('\t\t\t\t\tif (m.getName().startsWith("get")) {\n')
+
+					dst.append('\t\t\t\t\t\tif (res.size() == 0) {\n')
+					dst.append('\t\t\t\t\t\t\theader.append(m.getName().replace("get", "").toLowerCase());\n')
+					dst.append('\t\t\t\t\t\t\theader.append(",");\n')
+					dst.append('\t\t\t\t\t\t}\n')
+
+
+
+
 					dst.append('\t\t\t\t\t\ttry {\n')
-					dst.append('\t\t\t\t\t\t\tvalue += m.invoke(t) + ", ";\n')
-					dst.append('\t\t\t\t\t\t} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {}\n')
-					//dst.append('\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n')
+					dst.append('\t\t\t\t\t\t\tvalue.append(m.invoke(t));\n')
+					dst.append('\t\t\t\t\t\t\tvalue.append(",");\n')
+					dst.append('\t\t\t\t\t\t} catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {\n')
+					dst.append('\t\t\t\t\t\t\t logger.error(e1.getMessage());\n')
+					dst.append('\t\t\t\t\t\t}\n')
 
 					dst.append('\t\t\t\t\t}\n')
 					dst.append('\t\t\t\t}\n')
-					//	dst.append('\t\t\t}\n')
-					dst.append('\t\t\tif (' + entName + '.class.getSuperclass() != null) {\n')
-					dst.append('\t\t\t\tMethod[] superMethods = ' + entName + '.class.getSuperclass().getDeclaredMethods();\n')
-					dst.append('\t\t\t\tfor (Method m : superMethods) {\n')
-					dst.append('\t\t\t\t\tif (m.getName().startsWith("get") & m.getReturnType() != java.lang.Object.class) {\n')
+
+					dst.append('\t\t\t\tif (' + entName + '.class.getSuperclass() != null) {\n')
+					dst.append('\t\t\t\t\tMethod[] superMethods = ' + entName + '.class.getSuperclass().getDeclaredMethods();\n')
+					dst.append('\t\t\t\t\tfor (Method m : superMethods) {\n')
+					dst.append('\t\t\t\t\t\tif (m.getName().startsWith("get") & m.getReturnType() != java.lang.Object.class) {\n')
+					dst.append('\t\t\t\t\t\t\tif (res.size() == 0) {\n')
+					dst.append('\t\t\t\t\t\t\t\theader.append(m.getName().replace("get", "").toLowerCase());\n')
+					dst.append('\t\t\t\t\t\t\t\theader.append(",");\n')
+					dst.append('\t\t\t\t\t\t}\n')
+
+
 					dst.append('\t\t\t\t\t\ttry {\n')
-					dst.append('\t\t\t\t\t\t\t\tvalue += m.invoke(t) + ", ";\n')
-					dst.append('\t\t\t\t\t\t}catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {}\n')
+					dst.append('\t\t\t\t\t\t\tvalue.append(m.invoke(t));\n')
+					dst.append('\t\t\t\t\t\t\tvalue.append(",");\n')
+					dst.append('\t\t\t\t\t\t} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {\n')
+					dst.append('\t\t\t\t\t\t\t logger.error(e1.getMessage());\n')
+					dst.append('\t\t\t\t\t\t}\n')
 					dst.append('\t\t\t\t\t}\n')
 					dst.append('\t\t\t\t}\n')
 					dst.append('\t\t\t}\n')
-					//	dst.append('\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n')
-					//
-					dst.append('\t\t\t\tres.add(value);\n ')
+					dst.append('\t\t\tif (res.size() == 0 && header.length() > 0) {\n ')
+					dst.append('\t\t\t\tString s1 = header.toString().substring(0, header.toString().length()-1); \n')
+					dst.append('\t\t\t\tres.add(s1);\n ')
 					dst.append('\t\t\t}\n')
-					dst.append('\t\t\t\treturn res;\n\t\t\t});\n\n ')
+
+					dst.append('\t\t\tif (value.length() > 0) {\n ')
+					dst.append('\t\t\t\tString s1 = value.toString().substring(0, value.toString().length()-1);\n ')
+					dst.append('\t\t\t\tres.add(s1);\n ')
+					dst.append('\t\t\t}\n')
+
+					dst.append('\t\t}\n')
+					dst.append('\t\treturn res;\n\t});\n\n ')
 
 					dst.append('\t\tsaveMap.put('+ key+ '_DICTIONARY, (s, e) -> {\n' )
 					dst.append('\t\t\t'+ entName + ' ne = (' + entName + ')e ;\n');
