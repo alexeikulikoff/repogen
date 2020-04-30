@@ -200,7 +200,9 @@ class App {
 				}
 			}
 		}
-		dst.append("\t}\n}\n");
+		dst.append("\t\t}\n");
+
+		dst.append("\t}\n");
 	}
 
 
